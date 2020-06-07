@@ -8,9 +8,13 @@ const authReducer = (state, action) => {
     case "add_error": {
       return { ...state, errorMessage: action.payload };
     }
-    case "signup": {
+    case "signin": {
       return { errorMessage: "", token: action.payload };
     }
+    case "clear_error_message":
+      return { ...state, errorMessage: "" };
+    case "signout":
+      return { token: null, errorMessage: "" };
     default:
       return state;
   }
@@ -20,7 +24,7 @@ const signup = (dispatch) => async ({ email, password }) => {
   try {
     const response = await trackerApi.post("/signup", { email, password });
     await AsyncStorage.setItem("token", response.data.token);
-    dispatch({ type: "signup", payload: response.data.token });
+    dispatch({ type: "signin", payload: response.data.token });
 
     navigate("trackList");
   } catch (err) {
@@ -31,22 +35,43 @@ const signup = (dispatch) => async ({ email, password }) => {
   }
 };
 
-const signin = (dispatch) => {
-  return ({ email, password }) => {
-    //call api signin
-    //Handle successful signin
-    //Handle signin failure
-  };
+const signin = (dispatch) => async ({ email, password }) => {
+  try {
+    const response = await trackerApi.post("/signin", { email, password });
+    await AsyncStorage.setItem("token", response.data.token);
+    dispatch({ type: "signin", payload: response.data.token });
+
+    navigate("trackList");
+  } catch (err) {
+    dispatch({
+      type: "add_error",
+      payload: "Something went wrong with login. Pls try again!",
+    });
+  }
 };
 
-const signout = (dispatch) => {
-  return () => {
-    //Handle signout
-  };
+const tryLocalSignin = (dispatch) => async () => {
+  const token = await AsyncStorage.getItem("token");
+  console.log(token + " something here");
+  if (token) {
+    dispatch({ type: "sigin", payload: token });
+    navigate("trackList");
+  } else {
+    navigate("loginFlow");
+  }
+};
+
+const clearErrorMessage = (dispatch) => () =>
+  dispatch({ type: "clear_error_message" });
+
+const signout = (dispatch) => async () => {
+  const token = await AsyncStorage.removeItem("token");
+  dispatch({ type: signout, payload: "" });
+  navigate("loginFlow");
 };
 
 export const { Provider, Context } = createDataContext(
   authReducer,
-  { signup, signin, signout },
+  { signup, signin, signout, clearErrorMessage, tryLocalSignin },
   { token: null, errorMessage: "" }
 );

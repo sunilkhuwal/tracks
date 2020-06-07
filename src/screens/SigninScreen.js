@@ -1,18 +1,20 @@
 import React, { useContext } from "react";
-import { Text, View, StyleSheet, Button } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { NavigationEvents } from "react-navigation";
 import { Context as AuthContext } from "../context/AuthContext";
 import AuthForm from "../components/AuthForm";
 import NavLink from "../components/NavLink";
 
 const SigninScreen = ({ navigation }) => {
-  const { state, sigin } = useContext(AuthContext);
+  const { state, signin, clearErrorMessage } = useContext(AuthContext);
   return (
     <View style={styles.container}>
+      <NavigationEvents onWillFocus={clearErrorMessage} />
       <AuthForm
         headerText="Sign In for Tracker"
         errorMessage={state.errorMessage}
         submitFormText="Sign In"
-        onSubmit={sigin}
+        onSubmit={signin}
       />
 
       <NavLink
